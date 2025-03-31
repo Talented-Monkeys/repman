@@ -25,10 +25,25 @@ class ChangeTimezoneType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $zones = [];
+
+        // Holen Sie sich nur gültige Zeitzonen
         foreach (Timezones::getIds() as $zone) {
-            $zones[sprintf('%s %s', Timezones::getName($zone), Timezones::getGmtOffset($zone))] = $zone;
+            try {
+                // Versuchen, den Namen und den GMT-Offset der Zeitzone zu holen
+                $zoneName = Timezones::getName($zone);
+                $gmtOffset = Timezones::getGmtOffset($zone);
+
+                // Wenn die Zeitzone gültig ist, füge sie zu den Auswahlmöglichkeiten hinzu
+                if ($zoneName && $gmtOffset !== false) {
+                    $zones[sprintf('%s %s', $zoneName, $gmtOffset)] = $zone;
+                }
+            } catch (\Exception $e) {
+                // Ungültige Zeitzonen überspringen
+                continue;
+            }
         }
 
+        // Formular mit den validierten Zeitzonen
         $builder
             ->add('timezone', ChoiceType::class, [
                 'choices' => $zones,
@@ -44,7 +59,6 @@ class ChangeTimezoneType extends AbstractType
                     new Timezone(),
                 ],
             ])
-            ->add('changeTimezone', SubmitType::class, ['label' => 'Change timezone'])
-        ;
+            ->add('changeTimezone', SubmitType::class, ['label' => 'Change timezone']);
     }
 }
